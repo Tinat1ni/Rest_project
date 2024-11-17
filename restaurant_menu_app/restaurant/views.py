@@ -1,9 +1,10 @@
 from django_filters.rest_framework import FilterSet, filters
 from rest_framework import generics
+from rest_framework.exceptions import NotFound
 from rest_framework.filters import SearchFilter
 from rest_framework.generics import CreateAPIView
 from rest_framework.pagination import PageNumberPagination
-from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated
+from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated, AllowAny
 from .models import Subcategory, Restaurant, MainMenuCategory, Meal
 from .serializers import SubcategorySerializer, RestaurantSerializer, MainMenuCategorySerializer, \
     SubcategoryDetailSerializer, MealSerializer
@@ -13,15 +14,6 @@ class RestaurantListAPIView(generics.ListAPIView):
     queryset = Restaurant.objects.all()
     serializer_class = RestaurantSerializer
     permission_classes = [IsAuthenticatedOrReadOnly]
-
-
-class MainMenuCategoryListAPIView(generics.ListAPIView):
-    queryset = MainMenuCategory.objects.all()
-    serializer_class = MainMenuCategorySerializer
-
-    def get_queryset(self):
-        restaurant_id = self.kwargs['restaurant_id']
-        return MainMenuCategory.objects.filter(restaurant_id=restaurant_id)
 
 
 class SubcategoryFilter(FilterSet):
@@ -62,13 +54,24 @@ class RestaurantCreateAPIView(CreateAPIView):
         serializer.save(user=self.request.user)
 
 
-class MainMenuCategoryCreateAPIView(CreateAPIView):
+class MainMenuCategoryListCreateAPIView(generics.ListCreateAPIView):
     queryset = MainMenuCategory.objects.select_related('restaurant')
     serializer_class = MainMenuCategorySerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticatedOrReadOnly]
+
+    def get_queryset(self):
+        restaurant_id = self.kwargs.get('restaurant_id')
+        if restaurant_id:
+            return MainMenuCategory.objects.filter(restaurant_id=restaurant_id)
+        return MainMenuCategory.objects.all()
+
 
     def perform_create(self, serializer):
-        restaurant_id = self.request.data.get('restaurant_id')
-        restaurant = Restaurant.objects.get(id=restaurant_id)
+        restaurant_id = self.kwargs.get('restaurant_id')
+        try:
+            restaurant = Restaurant.objects.get(id=restaurant_id)
+        except Restaurant.DoesNotExist:
+            raise NotFound(detail='restaurant with that id does not exist')
+
         serializer.save(restaurant=restaurant)
 
