@@ -1,18 +1,18 @@
 from rest_framework import serializers
-from .models import Restaurant, Menu, Ingredient, Subcategory, Meal
+from .models import Restaurant, MainMenuCategory, Ingredient, Subcategory, Meal
 
 class RestaurantSerializer(serializers.ModelSerializer):
     class Meta:
         model = Restaurant
-        fields = '__all__'
+        fields = ['id', 'name']
 
 
-class MenuSerializer(serializers.ModelSerializer):
-    restaurant = RestaurantSerializer(read_only=True)
+class MainMenuCategorySerializer(serializers.ModelSerializer):
+    # restaurant = RestaurantSerializer(read_only=True)
 
     class Meta:
-        model = Menu
-        fields = '__all__'
+        model = MainMenuCategory
+        fields = ['id', 'name']
 
 
 class IngredientSerializer(serializers.ModelSerializer):
@@ -22,11 +22,11 @@ class IngredientSerializer(serializers.ModelSerializer):
 
 
 class SubcategorySerializer(serializers.ModelSerializer):
-    parent_category = MenuSerializer(read_only=True)
+    # parent_category = MainMenuCategorySerializer(read_only=True)
 
     class Meta:
         model = Subcategory
-        fields = '__all__'
+        fields = ['name', 'cover_photo']
 
 
 class MealSerializer(serializers.ModelSerializer):
@@ -38,5 +38,11 @@ class MealSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+class SubcategoryDetailSerializer(serializers.ModelSerializer):
+     meals = MealSerializer(many=True)
+
+     class Meta:
+         model = Subcategory
+         fields = ['name', 'cover_photo', 'meals']
 
 
