@@ -22,11 +22,11 @@ class IngredientSerializer(serializers.ModelSerializer):
 
 
 class SubcategorySerializer(serializers.ModelSerializer):
-    # parent_category = MainMenuCategorySerializer(read_only=True)
+    parent_category = MainMenuCategorySerializer(read_only=True)
 
     class Meta:
         model = Subcategory
-        fields = ['name', 'cover_photo']
+        fields = ['id','name', 'cover_photo', 'parent_category']
 
 
 class MealSerializer(serializers.ModelSerializer):
@@ -43,6 +43,6 @@ class SubcategoryDetailSerializer(serializers.ModelSerializer):
 
      class Meta:
          model = Subcategory
-         fields = ['name', 'cover_photo', 'meals']
+         fields = ['id', 'name', 'cover_photo', 'meals']
 
 
