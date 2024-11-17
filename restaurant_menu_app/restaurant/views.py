@@ -2,6 +2,7 @@ from django_filters.rest_framework import FilterSet, filters
 from rest_framework import generics
 from rest_framework.filters import SearchFilter
 from rest_framework.generics import CreateAPIView
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated
 from .models import Subcategory, Restaurant, MainMenuCategory, Meal
 from .serializers import SubcategorySerializer, RestaurantSerializer, MainMenuCategorySerializer, \
@@ -37,6 +38,7 @@ class SubCategoryListAPIView(generics.ListAPIView):
     queryset = Subcategory.objects.select_related('parent_category')
     serializer_class = SubcategorySerializer
     filter_class = SubcategoryFilter
+    pagination_class = PageNumberPagination
 
 
 class SubcategoryDetailAPIView(generics.RetrieveAPIView):
@@ -49,7 +51,6 @@ class MealsListAPIView(generics.ListAPIView):
     serializer_class = MealSerializer
     filter_backends = [SearchFilter]
     search_fields = ['name', 'menu_sub_category__name']
-
 
 
 class RestaurantCreateAPIView(CreateAPIView):
@@ -65,4 +66,9 @@ class MainMenuCategoryCreateAPIView(CreateAPIView):
     queryset = MainMenuCategory.objects.select_related('restaurant')
     serializer_class = MainMenuCategorySerializer
     permission_classes = [IsAuthenticated]
+
+    def perform_create(self, serializer):
+        restaurant_id = self.request.data.get('restaurant_id')
+        restaurant = Restaurant.objects.get(id=restaurant_id)
+        serializer.save(restaurant=restaurant)
 
